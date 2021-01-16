@@ -11,6 +11,11 @@ export const typeDefs = gql`
     HOUSE
   }
 
+  enum ListingsFilter {
+    PRICE_LOW_TO_HIGH
+    PRICE_HIGH_TO_LOW
+  }
+
   input LogInInput {
     code: String!
     loginType: LoginType!
@@ -20,6 +25,7 @@ export const typeDefs = gql`
     authUrl(loginType: LoginType): String!
     user(id: ID!): User!
     listing(id: ID!): Listing!
+    listings(filter: ListingsFilter!, limit: Int!, page: Int!): Listings!
   }
 
   type Mutation {
