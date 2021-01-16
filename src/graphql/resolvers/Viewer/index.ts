@@ -104,6 +104,9 @@ const logInViaThirdParty = async (
     name,
     avatar,
     contact,
+    income: 0,
+    listings: [],
+    bookings: [],
   });
 
   res.cookie('viewer', _id, {

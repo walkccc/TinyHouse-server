@@ -24,6 +24,7 @@ export const typeDefs = gql`
     id: ID
     token: String
     avatar: String
+    hasWallet: Boolean
     didRequest: Boolean!
   }
 `;
