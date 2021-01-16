@@ -174,6 +174,7 @@ export const viewerResolvers: IResolvers = {
           _id: user._id,
           token: user.token,
           avatar: user.avatar,
+          walletId: user.walletId,
           didRequest: true,
         };
       } catch (error) {
@@ -192,6 +193,9 @@ export const viewerResolvers: IResolvers = {
   Viewer: {
     id: (viewer: Viewer): string | undefined => {
       return viewer._id;
+    },
+    hasWallet: (viewer: Viewer): boolean | undefined => {
+      return viewer.walletId ? true : undefined;
     },
   },
 };
