@@ -1,4 +1,4 @@
-import { Listing, PagingData } from '../../../lib/types';
+import { Listing, ListingType, PagingData } from '../../../lib/types';
 
 export enum ListingsFilter {
   PRICE_LOW_TO_HIGH = 'PRICE_LOW_TO_HIGH',
@@ -24,4 +24,18 @@ export interface ListingsQuery {
   country?: string;
   state?: string;
   city?: string;
+}
+
+export interface HostListingInput {
+  title: string;
+  description: string;
+  image: string;
+  type: ListingType;
+  address: string;
+  price: number;
+  numOfGuests: number;
+}
+
+export interface HostListingArgs {
+  input: HostListingInput;
 }
