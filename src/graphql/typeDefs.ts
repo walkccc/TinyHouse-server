@@ -19,6 +19,7 @@ export const typeDefs = gql`
   type Query {
     authUrl(loginType: LoginType): String!
     user(id: ID!): User!
+    listing(id: ID!): Listing!
   }
 
   type Mutation {
