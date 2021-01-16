@@ -2,8 +2,9 @@ import { IResolvers } from 'apollo-server-express';
 import { Request } from 'express';
 import { ObjectId } from 'mongodb';
 
-import { ListingArgs, ListingsArgs, ListingsFilter } from './types';
+import { ListingArgs, ListingsArgs, ListingsData, ListingsFilter, ListingsQuery } from './types';
 
+import { OpenStreetMap } from '../../../lib/api';
 import { Booking, Database, Listing, PagingArgs, PagingData, User } from '../../../lib/types';
 import { authorize } from '../../../lib/utils';
 
@@ -32,17 +33,35 @@ export const listingResolver: IResolvers = {
     },
     listings: async (
       _root: undefined,
-      { filter, limit, page }: ListingsArgs,
+      { location, filter, limit, page }: ListingsArgs,
       { db }: { db: Database }
-    ): Promise<PagingData<Listing>> => {
+    ): Promise<ListingsData> => {
       try {
-        const data: PagingData<Listing> = {
+        const data: ListingsData = {
+          region: null,
           total: 0,
           result: [],
         };
+        const query: ListingsQuery = {};
+
+        if (location) {
+          const { country, state, city } = await OpenStreetMap.geocode(location);
+
+          if (city) query.city = city;
+          if (state) query.state = state;
+          if (country) {
+            query.country = country;
+          } else {
+            throw new Error('country not found');
+          }
+
+          const cityText = city ? `${city}, ` : '';
+          const stateText = state ? `${state}, ` : '';
+          data.region = `${cityText}${stateText}${country}`;
+        }
 
         const cursor = await db.listings
-          .find({})
+          .find(query)
           .sort({ price: filter === ListingsFilter.PRICE_LOW_TO_HIGH ? 1 : -1 })
           .skip(page > 0 ? (page - 1) * limit : 0)
           .limit(limit);
