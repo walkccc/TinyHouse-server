@@ -13,3 +13,7 @@ export interface LogInArgs {
     loginType: LoginType;
   } | null;
 }
+
+export interface ConnectStripeArgs {
+  input: { code: string };
+}

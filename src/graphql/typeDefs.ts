@@ -21,6 +21,10 @@ export const typeDefs = gql`
     loginType: LoginType!
   }
 
+  input ConnectStripeInput {
+    code: String!
+  }
+
   type Query {
     authUrl(loginType: LoginType): String!
     user(id: ID!): User!
@@ -31,6 +35,8 @@ export const typeDefs = gql`
   type Mutation {
     logIn(input: LogInInput): Viewer!
     logOut: Viewer!
+    connectStripe(input: ConnectStripeInput!): Viewer!
+    disconnectStripe: Viewer!
   }
 
   type Viewer {

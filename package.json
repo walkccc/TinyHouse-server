@@ -26,7 +26,8 @@
     "googleapis": "^67.0.0",
     "lodash.merge": "^4.6.2",
     "mongodb": "^3.6.3",
-    "node-geocoder": "^3.27.0"
+    "node-geocoder": "^3.27.0",
+    "stripe": "^8.131.1"
   },
   "scripts": {
     "start": "nodemon src/index.ts",
