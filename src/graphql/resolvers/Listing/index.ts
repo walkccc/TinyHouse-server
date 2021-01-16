@@ -12,7 +12,7 @@ import {
   ListingsQuery,
 } from './types';
 
-import { OpenStreetMap } from '../../../lib/api';
+import { Cloudinary, OpenStreetMap } from '../../../lib/api';
 import {
   Booking,
   Database,
@@ -128,9 +128,12 @@ export const listingResolver: IResolvers = {
           throw new Error('invalid address input');
         }
 
+        const imageUrl = await Cloudinary.upload(input.image);
+
         const insertResult = await db.listings.insertOne({
           ...input,
           _id: new ObjectId(),
+          image: imageUrl,
           host: viewer._id,
           address: `${city}, ${state}, ${country}`,
           country,
