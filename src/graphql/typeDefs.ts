@@ -6,6 +6,11 @@ export const typeDefs = gql`
     GOOGLE
   }
 
+  enum ListingType {
+    APARTMENT
+    HOUSE
+  }
+
   input LogInInput {
     code: String!
     loginType: LoginType!
@@ -13,6 +18,7 @@ export const typeDefs = gql`
 
   type Query {
     authUrl(loginType: LoginType): String!
+    user(id: ID!): User!
   }
 
   type Mutation {
@@ -26,5 +32,51 @@ export const typeDefs = gql`
     avatar: String
     hasWallet: Boolean
     didRequest: Boolean!
+  }
+
+  type User {
+    id: ID!
+    name: String!
+    avatar: String!
+    contact: String!
+    hasWallet: Boolean!
+    income: Int
+    listings(limit: Int!, page: Int!): Listings!
+    bookings(limit: Int!, page: Int!): Bookings
+  }
+
+  type Listing {
+    id: ID!
+    title: String!
+    description: String!
+    image: String!
+    host: User!
+    type: ListingType!
+    address: String!
+    country: String!
+    state: String!
+    city: String!
+    bookings(limit: Int!, page: Int!): Bookings
+    bookingsIndex: String!
+    price: Int!
+    numOfGuests: Int!
+  }
+
+  type Listings {
+    total: Int!
+    result: [Listing!]!
+  }
+
+  type Booking {
+    id: ID!
+    listing: Listing!
+    tenant: User!
+    checkIn: String!
+    checkOut: String!
+  }
+
+  type Bookings {
+    total: Int!
+    result: [Booking!]!
   }
 `;
