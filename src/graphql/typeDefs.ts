@@ -35,6 +35,13 @@ export const typeDefs = gql`
     numOfGuests: Int!
   }
 
+  input CreateBookingInput {
+    id: ID!
+    source: String!
+    checkIn: String!
+    checkOut: String!
+  }
+
   type Query {
     authUrl(loginType: LoginType): String!
     user(id: ID!): User!
@@ -48,6 +55,7 @@ export const typeDefs = gql`
     connectStripe(input: ConnectStripeInput!): Viewer!
     disconnectStripe: Viewer!
     hostListing(input: HostListingInput!): Listing!
+    createBooking(input: CreateBookingInput!): Booking!
   }
 
   type Viewer {
