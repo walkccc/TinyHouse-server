@@ -7,7 +7,6 @@
   "devDependencies": {
     "@types/cookie-parser": "^1.4.2",
     "@types/lodash.merge": "^4.6.6",
-    "@types/mongodb": "^3.6.3",
     "@types/node": "^14.14.21",
     "@types/node-geocoder": "^3.24.1",
     "@typescript-eslint/eslint-plugin": "^4.13.0",
@@ -27,9 +26,11 @@
     "express": "^4.17.1",
     "googleapis": "^67.0.0",
     "lodash.merge": "^4.6.2",
-    "mongodb": "^3.6.3",
     "node-geocoder": "^3.27.0",
-    "stripe": "^8.131.1"
+    "pg": "^8.5.1",
+    "reflect-metadata": "^0.1.13",
+    "stripe": "^8.131.1",
+    "typeorm": "^0.2.31"
   },
   "scripts": {
     "start": "nodemon src/index.ts",
