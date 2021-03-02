@@ -36,7 +36,7 @@ const logInViaThirdParty = async (
     }
 
     loginResponse = {
-      _id: githubUser._id,
+      id: githubUser.id,
       name: githubUser.name,
       avatar: githubUser.avatar_url,
       contact: githubUser.email,
@@ -67,55 +67,44 @@ const logInViaThirdParty = async (
     }
 
     loginResponse = {
-      _id: userId,
+      id: userId,
       name: userName,
       avatar: userAvatar,
       contact: userEmail,
     };
   }
 
-  const { _id, name, avatar, contact } = loginResponse;
+  const { id, name, avatar, contact } = loginResponse;
 
-  const updateResult = await db.users.findOneAndUpdate(
-    { _id },
-    {
-      $set: {
-        token,
-        name,
-        avatar,
-        contact,
-      },
-    },
-    { returnOriginal: false }
-  );
+  let viewer = await db.users.findOne({ id });
 
-  const updatedUser: User | undefined = updateResult.value;
+  if (viewer) {
+    viewer.name = name;
+    viewer.avatar = avatar;
+    viewer.contact = contact;
+    viewer.token = token;
+    await viewer.save();
+  } else {
+    const newUser: User = {
+      id,
+      token,
+      name,
+      avatar,
+      contact,
+      income: 0,
+      listings: [],
+      bookings: [],
+    };
 
-  if (updatedUser) {
-    res.cookie('viewer', _id, {
-      ...cookieOptions,
-      maxAge: 365 * 24 * 60 * 60 * 1000,
-    });
-    return updatedUser;
+    viewer = await db.users.create(newUser).save();
   }
 
-  const insertResult = await db.users.insertOne({
-    _id,
-    token,
-    name,
-    avatar,
-    contact,
-    income: 0,
-    listings: [],
-    bookings: [],
-  });
-
-  res.cookie('viewer', _id, {
+  res.cookie('viewer', id, {
     ...cookieOptions,
     maxAge: 365 * 24 * 60 * 60 * 1000,
   });
 
-  return insertResult.ops[0];
+  return viewer;
 };
 
 const loginViaCookie = async (
@@ -124,18 +113,16 @@ const loginViaCookie = async (
   req: Request,
   res: Response
 ): Promise<User | undefined> => {
-  const updateResult = await db.users.findOneAndUpdate(
-    { _id: req.signedCookies.viewer },
-    { $set: { token } },
-    { returnOriginal: false }
-  );
-  const updatedUser: User | undefined = updateResult.value;
+  const viewer = await db.users.findOne({ id: req.signedCookies.viewer });
 
-  if (!updatedUser) {
+  if (viewer) {
+    viewer.token = token;
+    await viewer.save();
+  } else {
     res.clearCookie('viewer', cookieOptions);
   }
 
-  return updatedUser;
+  return viewer;
 };
 
 export const viewerResolvers: IResolvers = {
@@ -172,7 +159,7 @@ export const viewerResolvers: IResolvers = {
         }
 
         return {
-          _id: user._id,
+          id: user.id,
           token: user.token,
           avatar: user.avatar,
           walletId: user.walletId,
@@ -196,7 +183,7 @@ export const viewerResolvers: IResolvers = {
       { db, req }: { db: Database; req: Request }
     ): Promise<Viewer> => {
       try {
-        let viewer = await authorize(db, req);
+        const viewer = await authorize(db, req);
         if (!viewer) {
           throw new Error('viewer not found');
         }
@@ -206,19 +193,11 @@ export const viewerResolvers: IResolvers = {
           throw new Error('Stripe grant error');
         }
 
-        const updateRes = await db.users.findOneAndUpdate(
-          { _id: viewer._id },
-          { $set: { walletId: wallet.stripe_user_id } },
-          { returnOriginal: false }
-        );
-        if (!updateRes.value) {
-          throw new Error("viewer couldn't be updated");
-        }
-
-        viewer = updateRes.value;
+        viewer.walletId = wallet.stripe_user_id;
+        await viewer.save();
 
         return {
-          _id: viewer._id,
+          id: viewer.id,
           token: viewer.token,
           avatar: viewer.avatar,
           walletId: viewer.walletId,
@@ -234,24 +213,16 @@ export const viewerResolvers: IResolvers = {
       { db, req }: { db: Database; req: Request }
     ): Promise<Viewer> => {
       try {
-        let viewer = await authorize(db, req);
+        const viewer = await authorize(db, req);
         if (!viewer) {
           throw new Error('viewer not found');
         }
 
-        const updateRes = await db.users.findOneAndUpdate(
-          { _id: viewer._id },
-          { $set: { walletId: undefined } },
-          { returnOriginal: false }
-        );
-        if (!updateRes.value) {
-          throw new Error("viewer couldn't be updated");
-        }
-
-        viewer = updateRes.value;
+        viewer.walletId = null;
+        await viewer.save();
 
         return {
-          _id: viewer._id,
+          id: viewer.id,
           token: viewer.token,
           avatar: viewer.avatar,
           walletId: undefined,
@@ -263,9 +234,6 @@ export const viewerResolvers: IResolvers = {
     },
   },
   Viewer: {
-    id: (viewer: Viewer): string | undefined => {
-      return viewer._id;
-    },
     hasWallet: (viewer: Viewer): boolean | undefined => {
       return viewer.walletId ? true : undefined;
     },

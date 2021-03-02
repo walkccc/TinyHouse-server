@@ -1,9 +1,11 @@
+import crypto from 'crypto';
+
 import { IResolvers } from 'apollo-server-express';
 import { Request } from 'express';
-import { ObjectId } from 'mongodb';
 
 import { CreateBookingArgs } from './types';
 
+import { ListingEntity, UserEntity } from '../../../database/entity';
 import { MyStripe as Stripe } from '../../../lib/api';
 import { Booking, BookingsIndex, Database, Listing, User } from '../../../lib/types';
 import { authorize } from '../../../lib/utils';
@@ -60,14 +62,14 @@ export const bookingResolver: IResolvers = {
         }
 
         // find listing document from database
-        const listing = await db.listings.findOne({ _id: new ObjectId(id) });
+        const listing = await db.listings.findOne({ id });
 
         if (!listing) {
           throw new Error('listing not found');
         }
 
         // check that viewer is not booking his own listing
-        if (listing.host === viewer._id) {
+        if (listing.host === viewer.id) {
           throw new Error("viewer can't book own listing");
         }
 
@@ -85,7 +87,7 @@ export const bookingResolver: IResolvers = {
           listing.price * ((checkOutDate.getTime() - checkInDate.getTime()) / 86400000 + 1);
 
         // get user document of host
-        const host = await db.users.findOne({ _id: listing.host });
+        const host = await db.users.findOne({ id: listing.host });
 
         if (!host || !host.walletId) {
           throw new Error("the host either not found or isn't connected with Stripe");
@@ -94,30 +96,26 @@ export const bookingResolver: IResolvers = {
         // create stripe charge
         await Stripe.charge(totalPrice, source, host.walletId);
 
-        // insert new booking in db
-        const insertRes = await db.bookings.insertOne({
-          _id: new ObjectId(),
-          listing: listing._id,
-          tenant: viewer._id,
+        const newBooking: Booking = {
+          id: crypto.randomBytes(16).toString('hex'),
+          listing: listing.id,
+          tenant: viewer.id,
           checkIn,
           checkOut,
-        });
+        };
 
-        const insertedBooking: Booking = insertRes.ops[0];
+        const insertedBooking = await db.bookings.create(newBooking).save();
 
-        // update host's income in db
-        await db.users.updateOne({ _id: host._id }, { $inc: { income: totalPrice } });
+        host.income = host.income + totalPrice;
+        await host.save();
 
-        // update booking field for tenant in db
-        await db.users.updateOne({ _id: viewer._id }, { $push: { bookings: insertedBooking._id } });
+        viewer.bookings.push(insertedBooking.id);
+        await viewer.save();
 
-        // update booking field for listing in db
-        await db.listings.updateOne(
-          { _id: listing._id },
-          { $set: { bookingsIndex }, $push: { bookings: insertedBooking._id } }
-        );
+        listing.bookingsIndex = bookingsIndex;
+        listing.bookings.push(insertedBooking.id);
+        await listing.save();
 
-        // return newly inserted booking
         return insertedBooking;
       } catch (error) {
         throw new Error(`Failed to create a booking: ${error}`);
@@ -125,22 +123,19 @@ export const bookingResolver: IResolvers = {
     },
   },
   Booking: {
-    id: (booking: Booking): string => {
-      return booking._id.toHexString();
-    },
     listing: (
       booking: Booking,
       _args: undefined,
       { db }: { db: Database }
-    ): Promise<Listing | null> => {
-      return db.listings.findOne({ _id: booking.listing });
+    ): Promise<ListingEntity | undefined> => {
+      return db.listings.findOne({ id: booking.listing });
     },
     tenant: (
       booking: Booking,
       _args: undefined,
       { db }: { db: Database }
-    ): Promise<User | null> => {
-      return db.users.findOne({ _id: booking.tenant });
+    ): Promise<UserEntity | undefined> => {
+      return db.users.findOne({ id: booking.tenant });
     },
   },
 };

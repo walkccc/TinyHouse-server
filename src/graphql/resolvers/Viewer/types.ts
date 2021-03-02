@@ -1,7 +1,7 @@
 import { LoginType } from '../../../lib/types';
 
 export interface LogInViaThirdPartyResponse {
-  _id: string;
+  id: string;
   name: string;
   avatar: string;
   contact: string;

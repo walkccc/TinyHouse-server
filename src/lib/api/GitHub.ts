@@ -27,7 +27,7 @@ interface GitHubUserResponse {
 
 interface GitHubLoginResponse {
   githubUser: {
-    _id: string;
+    id: string;
     avatar_url: string;
     name: string;
     email: string;
@@ -58,7 +58,7 @@ const getUserData = async (token: string) => {
   const json: GitHubUserResponse = await res.json();
   const { id, node_id, avatar_url, name, email } = json;
 
-  return { data: { _id: `${id}+${node_id}`, avatar_url, name: name ?? '', email: email ?? '' } };
+  return { data: { id: `${id}+${node_id}`, avatar_url, name: name ?? '', email: email ?? '' } };
 };
 
 export const GitHub = {
