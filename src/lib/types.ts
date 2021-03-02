@@ -1,4 +1,6 @@
-import { Collection, ObjectId } from 'mongodb';
+import { Repository } from 'typeorm';
+
+import { BookingEntity, ListingEntity, UserEntity } from '../database/entity';
 
 export enum LoginType {
   GitHub = 'GITHUB',
@@ -11,45 +13,45 @@ export enum ListingType {
 }
 
 export interface Viewer {
-  _id?: string;
+  id?: string;
   token?: string;
   avatar?: string;
-  walletId?: string;
+  walletId?: string | null;
   didRequest: boolean;
 }
 
-// MongoDB
+// PostgreSQL
 export interface Database {
-  users: Collection<User>;
-  listings: Collection<Listing>;
-  bookings: Collection<Booking>;
+  users: Repository<UserEntity>;
+  listings: Repository<ListingEntity>;
+  bookings: Repository<BookingEntity>;
 }
 
 export interface User {
-  _id: string;
+  id: string;
   token: string;
   name: string;
   avatar: string;
   contact: string;
-  walletId?: string;
+  walletId?: string | null;
   income: number;
-  listings: ObjectId[];
-  bookings: ObjectId[];
+  listings: string[];
+  bookings: string[];
   authorized?: boolean;
 }
 
 export interface Listing {
-  _id: ObjectId;
+  id: string;
   title: string;
   description: string;
   image: string;
-  host: string; // user._id
+  host: string; // user.id
   type: ListingType;
   address: string;
   country: string;
   state: string;
   city: string;
-  bookings: ObjectId[];
+  bookings: string[];
   bookingsIndex: BookingsIndex;
   price: number;
   numOfGuests: number;
@@ -57,9 +59,9 @@ export interface Listing {
 }
 
 export interface Booking {
-  _id: ObjectId;
-  listing: ObjectId;
-  tenant: string; // user._id
+  id: string;
+  listing: string;
+  tenant: string; // user.id
   checkIn: string; // date in string
   checkOut: string; // date in string
 }

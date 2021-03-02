@@ -9,21 +9,9 @@ const clear = async () => {
 
     const db = await connectDatabase();
 
-    const bookings = await db.bookings.find({}).count();
-    const listings = await db.listings.find({}).count();
-    const users = await db.users.find({}).count();
-
-    if (bookings > 0) {
-      await db.bookings.drop();
-    }
-
-    if (listings > 0) {
-      await db.listings.drop();
-    }
-
-    if (users > 0) {
-      await db.users.drop();
-    }
+    await db.bookings.clear();
+    await db.listings.clear();
+    await db.users.clear();
 
     console.log('[clear]: Successfully cleared the database!');
   } catch (error) {

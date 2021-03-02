@@ -1,19 +1,15 @@
-import { MongoClient } from 'mongodb';
+import { createConnection } from 'typeorm';
 
-import { Booking, Database, Listing, User } from '../lib/types';
+import { BookingEntity, ListingEntity, UserEntity } from './entity';
 
-const url = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_USER_PASSWORD}@${process.env.DB_CLUSTER}.mongodb.net/<dbname>?retryWrites=true&w=majority`;
+import { Database } from '../lib/types';
 
 export const connectDatabase = async (): Promise<Database> => {
-  const client = await MongoClient.connect(url, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
-  const db = client.db('main');
+  const connection = await createConnection();
 
   return {
-    users: db.collection<User>('users'),
-    listings: db.collection<Listing>('listings'),
-    bookings: db.collection<Booking>('bookings'),
+    users: connection.getRepository(UserEntity),
+    listings: connection.getRepository(ListingEntity),
+    bookings: connection.getRepository(BookingEntity),
   };
 };
